@@ -1,0 +1,497 @@
+/* ARCHETYP: RESTAURACJA / KAWIARNIA — arkusz wyłącznie tego projektu.
+ *
+ * Wzorzec dla wszystkiego, co sprzedaje STOLIK I KARTĘ: restauracja, pizzeria,
+ * kawiarnia, bistro. W bazie prospektów to 9 firm, ale najbardziej dochodowych —
+ * to jedyna kategoria, w której własna strona odbiera prowizję agregatorom.
+ *
+ * Reguła układu: pasek rezerwacji zachodzi na zdjęcie i jest pierwszą rzeczą
+ * pod nagłówkiem. Gość ma zająć stolik, zanim zacznie czytać o kuchni.
+ * Karta dań idzie w zakładkach, bo nikt nie czyta trzydziestu pozycji z rzędu —
+ * a panele siedzą w HTML od początku, więc działają nawet bez JavaScriptu.
+ *
+ * Ciemna zieleń zamiast czerni: jedzenie na zdjęciach jest ciepłe i czerwone,
+ * a zielone tło je podbija zamiast z nim konkurować.
+ */
+
+:root{
+  --las:#12261D;
+  --las-2:#193225;
+  --krem:#FBF7EF;
+  --krem-2:#F2EBDD;
+  --atrament:#1C1A16;
+  --szept:#6E6659;
+  --zloto:#8A6A23;
+  --zloto-jasne:#C6A45C;
+  --kant:#E2D9C7;
+  --kant-ciemny:#2C4335;
+  --tyt:'Marcellus',Georgia,'Times New Roman',serif;
+  --tekst:'Mulish',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --szer:1200px;
+  --tempo:.5s;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--krem);color:var(--atrament);
+  font:400 16.5px/1.72 var(--tekst);-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit}
+h1,h2,h3{font-family:var(--tyt);font-weight:400;line-height:1.16;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.skip{position:absolute;left:-9999px;background:var(--las);color:var(--krem);padding:10px 16px;z-index:300}
+.skip:focus{left:12px;top:12px}
+:focus-visible{outline:2px solid var(--zloto);outline-offset:3px}
+.nadtytul{font-size:.7rem;font-weight:600;letter-spacing:.28em;text-transform:uppercase;
+  color:var(--zloto);margin:0 0 14px}
+.wstep{font-size:1.02rem;color:var(--szept);max-width:62ch;margin:0}
+.drobne{font-size:.84rem;color:var(--szept);margin:16px 0 0;max-width:60ch}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-size:.8rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:none;cursor:pointer;border:1px solid transparent;padding:15px 28px;
+  transition:background var(--tempo),color var(--tempo),border-color var(--tempo),transform var(--tempo)}
+.btn--zloty{background:var(--zloto);color:var(--krem)}
+.btn--zloty:hover{background:#6F5416;transform:translateY(-2px)}
+.btn--obrys{background:transparent;color:var(--krem);border-color:rgba(251,247,239,.45)}
+.btn--obrys:hover{background:rgba(251,247,239,.12);border-color:var(--krem)}
+.znajdz .btn--obrys{color:var(--atrament);border-color:var(--kant)}
+.znajdz .btn--obrys:hover{background:var(--krem-2);border-color:var(--zloto)}
+.btn--duzy{padding:17px 34px}
+.btn--belka{padding:12px 22px}
+
+/* ------------------------------------------------------------- belka */
+.belka{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:20px;min-width:0;
+  padding:10px clamp(14px,3vw,32px);background:var(--las);color:var(--krem);
+  border-bottom:1px solid var(--kant-ciemny);transition:box-shadow var(--tempo)}
+.belka.przewiniety{box-shadow:0 4px 22px rgba(18,38,29,.28)}
+.marka{display:flex;flex-direction:column;text-decoration:none;margin-right:auto;min-width:0;
+  font-family:var(--tyt);font-size:1.22rem;line-height:1.1;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.marka-pod{font-family:var(--tekst);font-size:.6rem;font-weight:600;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--zloto-jasne);margin-top:3px}
+.nawi{display:flex;gap:26px}
+.nawi a{font-size:.76rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:none;color:rgba(251,247,239,.78);padding:6px 0;
+  border-bottom:1px solid transparent;transition:color var(--tempo),border-color var(--tempo)}
+.nawi a:hover{color:var(--krem);border-bottom-color:var(--zloto-jasne)}
+.jz{display:flex;gap:0;flex:0 0 auto}
+.jz .lang{font-size:.68rem;font-weight:600;letter-spacing:.08em;padding:6px 7px;
+  text-decoration:none;color:rgba(251,247,239,.72);transition:color var(--tempo)}
+.jz .lang:hover{color:var(--krem)}
+.jz .lang.is-on{color:var(--zloto-jasne)}
+.ham{display:none;background:0;border:0;padding:10px;cursor:pointer;flex-direction:column;gap:5px}
+.ham span{display:block;width:22px;height:2px;background:var(--krem)}
+.mm{display:none}
+
+/* -------------------------------------------------------------- hero */
+.hero{position:relative;isolation:isolate;min-height:clamp(400px,58vh,560px);
+  display:flex;align-items:center;color:var(--krem)}
+.hero-foto{position:absolute;inset:0;z-index:-1;overflow:hidden}
+.hero-foto picture,.hero-foto img{width:100%;height:100%;object-fit:cover}
+.hero-zaslona{position:absolute;inset:0;
+  background:linear-gradient(96deg,rgba(18,38,29,.93) 0%,rgba(18,38,29,.78) 40%,rgba(18,38,29,.34) 72%,rgba(18,38,29,.6) 100%)}
+.hero-tresc{max-width:var(--szer);width:100%;margin:0 auto;
+  padding:clamp(46px,7vw,80px) clamp(20px,4vw,32px) clamp(74px,9vw,110px)}
+.hero h1{font-size:clamp(2.4rem,6.4vw,4.6rem);max-width:13ch}
+.hero-lead{font-size:clamp(1rem,1.5vw,1.16rem);color:rgba(251,247,239,.9);
+  max-width:46ch;margin:18px 0 0}
+.hero-guziki{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+
+/* -------------------------------------------------------- rezerwacja */
+.rezerwacja{max-width:var(--szer);margin:0 auto;padding:0 clamp(20px,4vw,32px);
+  position:relative;z-index:5;margin-top:clamp(-56px,-5vw,-40px)}
+.rez-pasek{display:grid;gap:14px;background:var(--krem);border:1px solid var(--kant);
+  box-shadow:0 14px 40px rgba(18,38,29,.14);padding:clamp(20px,3vw,28px)}
+.rez-pole{display:grid;gap:6px;min-width:0}
+.rez-pole label{font-size:.64rem;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--szept)}
+.pole{width:100%;background:#fff;color:var(--atrament);border:1px solid var(--kant);
+  padding:12px 13px;font:400 .95rem/1.4 var(--tekst);transition:border-color var(--tempo)}
+.pole:hover,.pole:focus{border-color:var(--zloto)}
+select.pole{appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--zloto) 50%),linear-gradient(135deg,var(--zloto) 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 12px) 50%;
+  background-size:6px 6px,6px 6px;background-repeat:no-repeat;padding-right:36px}
+.rez-pasek .btn{align-self:end}
+.rez-komunikat{margin:12px 0 0;font-size:.9rem;min-height:1.2em}
+.rez-komunikat.ok{color:#1F6B3A}
+.rez-komunikat.zle{color:#A32017}
+.rez-nota{margin:6px 0 0;font-size:.82rem;color:var(--szept)}
+
+/* ------------------------------------------------------------- fakty */
+.fakty{max-width:var(--szer);margin:clamp(40px,5vw,64px) auto 0;
+  padding:0 clamp(20px,4vw,32px);display:grid;gap:0}
+.fakt{display:flex;align-items:flex-start;gap:14px;padding:22px 0;border-bottom:1px solid var(--kant)}
+.fakt svg{width:24px;height:24px;flex:0 0 auto;margin-top:3px;fill:none;stroke:var(--zloto);
+  stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.fakt-etyk{display:block;font-size:.64rem;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--szept);margin-bottom:4px}
+.fakt b{display:block;font-family:var(--tyt);font-weight:400;font-size:1.16rem}
+.fakt b a{text-decoration:none}
+.fakt b a:hover{color:var(--zloto)}
+.fakt-pod{display:block;font-size:.82rem;color:var(--szept);margin-top:4px}
+
+/* ------------------------------------------------------------ sekcje */
+.historia,.karta,.przyjecia,.opinie{max-width:var(--szer);margin:0 auto;
+  padding:clamp(56px,8vw,110px) clamp(20px,4vw,32px)}
+.karta h2,.opinie h2,.historia h2,.przyjecia h2{font-size:clamp(1.8rem,4vw,2.9rem);margin-bottom:.4em}
+
+.historia{display:grid;gap:clamp(26px,4vw,58px);align-items:center}
+.historia-foto{overflow:hidden;background:var(--krem-2)}
+.historia-foto img{width:100%;height:clamp(280px,38vw,440px);object-fit:cover}
+.historia p{color:var(--szept);margin:0 0 1.1em;max-width:58ch}
+.podpis{font-family:var(--tyt);font-size:1.5rem;color:var(--atrament);margin:22px 0 0}
+.podpis-rola{font-size:.66rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--szept);margin:4px 0 0}
+
+/* -------------------------------------------------------------- karta */
+.zakladki{display:flex;flex-wrap:wrap;gap:0;margin-top:clamp(28px,4vw,44px);
+  border-bottom:1px solid var(--kant)}
+.zakladka{background:0;border:0;cursor:pointer;font:600 .78rem/1 var(--tekst);
+  letter-spacing:.16em;text-transform:uppercase;color:var(--szept);padding:16px 22px;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color var(--tempo),border-color var(--tempo)}
+.zakladka:hover{color:var(--atrament)}
+.zakladka[aria-selected="true"]{color:var(--zloto);border-bottom-color:var(--zloto)}
+.dania{list-style:none;margin:0;padding:0}
+.danie{padding:22px 0;border-bottom:1px solid var(--kant)}
+.danie-glowa{display:flex;align-items:baseline;gap:14px}
+/* Kropkowana linia między nazwą a ceną — sposób, w jaki od zawsze składa się
+   drukowaną kartę dań, i najszybszy do odczytania. */
+.danie-glowa::after{content:"";flex:1;order:1;height:0;
+  border-bottom:1px dotted var(--kant);transform:translateY(-4px)}
+.danie h3{font-size:1.16rem;order:0}
+.danie-cena{order:2;font-family:var(--tyt);font-size:1.16rem;color:var(--zloto);white-space:nowrap}
+.danie p{margin:6px 0 0;font-size:.94rem;color:var(--szept);max-width:64ch}
+.wybor{display:inline-block;font-family:var(--tekst);font-size:.6rem;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--krem);background:var(--zloto);
+  padding:3px 8px;margin-left:8px;vertical-align:middle;white-space:nowrap}
+.alergeny{display:flex;align-items:flex-start;gap:10px;margin-top:30px;
+  font-size:.88rem;color:var(--szept);max-width:70ch;font-style:italic}
+.alergeny svg{width:19px;height:19px;flex:0 0 auto;margin-top:2px;fill:none;
+  stroke:var(--zloto);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+
+/* ------------------------------------------------------------ galeria */
+.galeria{display:grid;gap:6px;grid-template-columns:1fr}
+.galeria figure{margin:0;position:relative;overflow:hidden;background:var(--krem-2)}
+.galeria img{width:100%;height:clamp(220px,26vw,300px);object-fit:cover;
+  transition:transform .9s cubic-bezier(.2,.7,.3,1)}
+.galeria figure:hover img{transform:scale(1.05)}
+.galeria figcaption{position:absolute;left:0;bottom:0;background:var(--krem);color:var(--zloto);
+  font-size:.64rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;padding:7px 13px}
+.galeria-nota{max-width:var(--szer);margin:12px auto 0;padding:0 clamp(20px,4vw,32px);
+  font-size:.8rem;color:var(--szept)}
+
+/* ---------------------------------------------------------- przyjęcia */
+.przyjecia{display:grid;gap:clamp(26px,4vw,54px);align-items:center}
+.przyjecia-foto{overflow:hidden;background:var(--krem-2)}
+.przyjecia-foto img{width:100%;height:clamp(260px,32vw,380px);object-fit:cover}
+.przyjecia p{color:var(--szept);margin:0 0 26px;max-width:52ch}
+
+/* ------------------------------------------------------------- opinie */
+.opinie{background:var(--las);color:var(--krem);max-width:none}
+.opinie > *{max-width:var(--szer);margin-inline:auto}
+.opinie .nadtytul{color:var(--zloto-jasne)}
+.opinie-kolumna{max-width:70ch;margin:clamp(28px,4vw,44px) auto 0;
+  display:grid;gap:clamp(26px,4vw,40px)}
+.opinia{margin:0;text-align:center}
+.opinia + .opinia{padding-top:clamp(26px,4vw,40px);position:relative}
+/* Przerywnik zamiast obwódki: cienka złota kreska między cytatami, jak
+   ozdobnik między działami karty. */
+.opinia + .opinia::before{content:"";position:absolute;top:0;left:50%;
+  transform:translateX(-50%);width:56px;height:1px;background:var(--zloto-jasne);opacity:.6}
+.opinia blockquote{margin:0}
+.opinia p{margin:0;font-family:var(--tyt);font-style:italic;
+  font-size:clamp(1.05rem,2.4vw,1.4rem);line-height:1.5;color:var(--krem)}
+.opinia figcaption{margin-top:14px;font-size:.82rem;letter-spacing:.14em;
+  text-transform:uppercase;color:rgba(251,247,239,.72)}
+.opinia cite{font-style:normal;color:var(--zloto-jasne)}
+
+/* ------------------------------------------------------------- znajdź */
+.znajdz{border-top:1px solid var(--kant)}
+.mapa{min-height:340px;background:var(--krem-2)}
+.pas-lokalu{display:flex;flex-wrap:wrap;align-items:center;gap:18px 34px;
+  padding:clamp(24px,4vw,40px) clamp(20px,4vw,32px);border-top:1px solid var(--kant)}
+.pas-adres{flex:1 1 260px}
+.pas-adres .adres{margin:0}
+.znajdz > .drobne{margin:0;padding:0 clamp(20px,4vw,32px) clamp(24px,4vw,38px);
+  max-width:60ch}
+.mapa iframe{width:100%;height:100%;min-height:340px;border:0;display:block}
+.pas-adres h2{font-size:clamp(1.4rem,2.8vw,1.9rem);margin-bottom:.3em}
+.adres{margin:0 0 16px;line-height:1.8}
+.tel-duzy{display:inline-block;font-family:var(--tyt);font-size:clamp(1.5rem,3.4vw,2.1rem);
+  text-decoration:none;color:var(--zloto)}
+.tel-duzy:hover{color:#6F5416}
+.godziny-tabela{width:100%;border-collapse:collapse;margin-top:20px;max-width:420px}
+.godziny-tabela th,.godziny-tabela td{padding:9px 0;border-bottom:1px solid var(--kant);
+  text-align:left;font-weight:400;font-size:.9rem}
+.godziny-tabela td{text-align:right;color:var(--szept);font-variant-numeric:tabular-nums}
+
+.stopa{background:var(--las);color:rgba(251,247,239,.78);text-align:center;padding:52px 20px}
+.stopa-marka{margin:0 0 12px;font-family:var(--tyt);
+  font-size:clamp(1.7rem,5vw,2.6rem);line-height:1.1;color:var(--krem)}
+.stopa-adres{margin:0 0 6px;font-size:.95rem}
+/* Przypis o godzinach na złocie: to jedyna informacja w stopce, która może
+   kogoś jeszcze dziś przyprowadzić do stolika. */
+.stopa-godz{margin:0 auto 18px;max-width:46ch;font-size:.88rem;color:var(--zloto-jasne)}
+.stopa .drobne{margin:0;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
+  color:rgba(251,247,239,.66)}
+
+@media (min-width:700px){
+  .fakty{grid-template-columns:repeat(3,1fr);gap:0 34px}
+  .galeria{grid-template-columns:repeat(2,1fr)}
+}
+@media (min-width:940px){
+  .rez-pasek{grid-template-columns:repeat(5,1fr) auto;gap:16px;align-items:end}
+  .historia{grid-template-columns:.9fr 1.1fr}
+  .przyjecia{grid-template-columns:1.1fr .9fr}
+  .przyjecia-foto{order:-1}
+  .galeria{grid-template-columns:repeat(4,1fr)}
+}
+@media (max-width:939px){
+  .nawi{display:none}
+  .ham{display:flex}
+  .btn--belka{padding:11px 15px;font-size:.7rem}
+  .mm{display:none;position:fixed;inset:62px 0 auto;z-index:95;background:var(--las);
+    border-bottom:1px solid var(--kant-ciemny);padding:6px 20px 18px;flex-direction:column}
+  .mm.otwarte{display:flex}
+  .mm a{color:var(--krem);font-size:.82rem;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;text-decoration:none;padding:15px 0;
+    border-bottom:1px solid var(--kant-ciemny)}
+  .rezerwacja{margin-top:clamp(-40px,-4vw,-24px)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+}
+
+.img--hero{object-position:50% 55%}
+.img--about{object-position:50% 50%}
+.img--kadr-1{object-position:50% 50%}
+.img--kadr-2{object-position:50% 50%}
+.img--kadr-3{object-position:50% 50%}
+.img--kadr-4{object-position:50% 50%}
+.img--wydarzenia{object-position:50% 50%}
+
+/* ================================================ TYDZIEŃ JAKO PAS KOLUMN
+ * Restauracja pracuje siedem dni, a różnice są drobne — piątek i sobota
+ * dłużej. Pionowa tabela każe przeczytać siedem wierszy, żeby zauważyć dwie
+ * zmiany. Pas siedmiu kolumn pokazuje ten sam tydzień jednym spojrzeniem.
+ */
+.pas-godzin{background:var(--las);color:var(--krem);
+  padding:clamp(38px,5vw,64px) clamp(20px,4vw,32px)}
+.pas-godzin-srodek{max-width:var(--szer);margin:0 auto}
+.pas-godzin .nadtytul{color:var(--zloto-jasne)}
+.pas-godzin .drobne{color:rgba(251,247,239,.72);max-width:70ch}
+.kolumny-tygodnia{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;
+  background:var(--kant-ciemny);border:1px solid var(--kant-ciemny);margin:6px 0 0}
+.kolumna-dnia{background:var(--las);display:grid;gap:8px;justify-items:center;
+  text-align:center;padding:18px 6px;min-width:0}
+.kd-dzien{font-size:.68rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--zloto-jasne)}
+.kd-czas{font-family:var(--tyt);font-size:.98rem;line-height:1.4;
+  font-variant-numeric:tabular-nums}
+.kolumna-dnia--zamkniete .kd-czas{color:rgba(251,247,239,.5);font-size:.86rem}
+/* Dzisiejsza kolumna podświetlona — gość widzi swój dzień bez szukania. */
+.kolumna-dnia.dzis{background:#1B3729}
+.kolumna-dnia.dzis .kd-dzien{color:var(--krem)}
+
+@media (max-width:700px){
+  /* Siedem kolumn nie mieści się na telefonie — pas przewijamy palcem. */
+  .kolumny-tygodnia{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .kolumna-dnia{flex:0 0 108px}
+}
+
+/* ==================================== TELEFON: dotyk i czytelność
+ * Zmierzone skryptem scripts/mobile.mjs na 360 i 390 px, w trzech językach.
+ *
+ * Przełącznik języka miał 26×29 px. To jest pierwszy element, w który celuje
+ * ukraiński klient po wejściu na stronę, a opuszek palca ma około 45 px —
+ * czyli trafiał obok. Podpisy i etykiety siedziały na 10.9–11.5 px.
+ *
+ * Rozmiary idą z !important, bo bez tego przegrywają na specyficzności
+ * z regułami dekoracyjnymi (.jezyk .lang, .galeria figcaption). To są progi
+ * dostępności, nie ozdoba — muszą wygrać. Poza wąskim ekranem nic się nie zmienia.
+ */
+@media (max-width: 900px){
+  .lang{
+    min-width:44px !important;min-height:44px !important;padding:0 6px !important;
+    display:inline-flex !important;align-items:center;justify-content:center;
+    font-size:12px !important;
+  }
+  .ham{min-width:44px !important;min-height:44px !important;
+    align-items:center;justify-content:center}
+  .marka,.logo,.znak,.szyld-marka,.tytul-marki,.nazwa{
+    min-height:44px !important;display:flex !important;align-items:center}
+
+  /* Wersaliki z dużym rozstrzeleniem poniżej 12 px są na telefonie
+     nieczytelne, niezależnie od tego, jak dobrze wyglądają na monitorze. */
+  .nadtytul,.nadpis,.etyk,.etykieta,.etykietka,.plakietka,.tag,.mini,
+  .metryczka,.sygnatura,.kd-dzien,.chip-dzien,.dzis-etyk,.dzis-etykieta,
+  .sala-etyk,.para-etyk,.blok-tytul,.zaufanie-etyk,.numer,.numerek,
+  .fakt-etyk,.bilecik-nad,.pas-telefon-etyk,.kreda-czas,
+  figcaption,.kolo-czas,.chip-czas,.pigulka-czas,.kd-czas,.dzwon,
+  .kafel-czas,.zaufanie-pod,.fakt-pod,.os-czas,.wiersz-czas,
+  .lekarz-pwz,.opinia-zrodlo,.reszta-tygodnia,.sala-dni,.sala-czas{
+    font-size:12px !important;
+  }
+
+  /* Długie numery i nazwy ulic nie mogą rozpychać strony w bok. */
+  .tel-link,.tel-duzy,.numer-duzy,.wielki-nr,.duzy-tel,.duzy-numer,
+  .telefon,.numer-xl,.bilecik-numer,.tel,.adr-wielki,.ulica{
+    overflow-wrap:anywhere;
+  }
+}
+
+
+/* ============================ TELEFON: reszta celów i etykiet
+ * Trzecia tura po pomiarze scripts/mobile.mjs. Patrz komentarz w tmp/mobile-3.mjs.
+ */
+@media (max-width: 900px){
+  /* Etykiety i nagłówki tabel: max() nigdy nie zmniejsza, tylko podnosi
+     te, które siedziały poniżej progu. */
+  th,td,dt,label,legend,small,
+  .kol-czas,.kol-cena,.kol-zakres,.poz-nr,.poz-cena,.metka,.cennik,
+  .usluga-cena,.grupa-razy,.skladka li,.dostawa-cena{
+    font-size:max(12px,.8rem);
+  }
+
+  /* Cele dotykowe: telefon w pasku, przyciski, kafelki godzin w kreatorze,
+     rozwijane pytania. Wszystko, co się naciska palcem. */
+  a[href^="tel:"],.btn,.guzik,.klaw,.klawisz,.pig,.pigula,.ramka,.obwodka,
+  .linia,.nr,.tel-link,.tel-btn,.tel-pigula,.dzwon,.telefon-gora,.link-strzalka,
+  .godzina,.dzien,.zakladka,summary{
+    min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+  }
+  /* Rozwijane pytania i zakładki są blokowe — wyrównanie do lewej,
+     inaczej tekst wskoczyłby na środek. */
+  summary,.zakladka{justify-content:flex-start}
+
+  /* iOS przybliża stronę przy dotknięciu pola mniejszego niż 16 px.
+     To zachowanie Safari, nie preferencja — jedyne wyjście to 16 px. */
+  input,select,textarea{font-size:16px;min-height:44px}
+  textarea{min-height:80px}
+}
+
+
+/* ================== TELEFON: ostatnie drobiazgi
+ * Dokładne miejsca z tmp/male-teksty.mjs: ceny w cennikach, podpisy przycisków,
+ * numer w pasku i dopisek w logotypie. Wszystko poniżej 12 px na 390 px.
+ * Gola s ma pod znakiem napis EST. KIELCE ustawiony na 9 px — na monitorze
+ * to elegancki detal, w ręce nieczytelna plamka. */
+@media (max-width:900px){
+  .wielka-pigula span,.telefon-gora,.cena-bukietu,.lista-cena,
+  .znak-n,.znak-r,.tydzien summary,.ramka,.bilecik-guziki .ramka,
+  .marka-pod,.hero-adres,.grupa-razy,.cennik,.metka{font-size:12px !important}
+}
+
+
+/* ================== TELEFON: budżet paska nagłówka
+ * Patrz komentarz w tmp/mobile-4.mjs — to jest naprawa regresji, którą sam
+ * wprowadziłem, podnosząc cele dotykowe bez sprawdzenia szerokości paska.
+ */
+@media (max-width: 900px){
+  .belka,.nav,.naglowek-strony,.szyld,.pas-gorny,.listwa,.top-bar,.gora{
+    flex-wrap:nowrap;
+  }
+  /* Marka może się skrócić wielokropkiem; reszta paska nie może zniknąć. */
+  .marka,.logo,.znak,.szyld-marka,.tytul-marki,.nazwa,.marka-nazwa{
+    min-width:44px;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;
+  /* Nazwa firmy jest w pasku najwazniejsza — to po nia klient patrzy pierwszy.
+     Wczesniej przelacznik jezyka (3 x 44px) spychal ja do 44px i "Dentika"
+     pokazywala sie jako "De". Guziki jezyka zwezone; WYSOKOSC 44px zostaje,
+     bo to ona decyduje o trafianiu palcem, a 32px szerokosci i tak jest
+     powyzej progu 24px z WCAG 2.5.8. */
+  .jz .lang,.jezyk .lang,.jezyki .lang,.jez .lang{min-width:32px;padding-inline:4px}
+  }
+  .jz,.jezyk,.jezyki{flex:0 0 auto}
+
+  /* Nagłówki tabel: th przegrywa na specyficzności z .cennik thead th. */
+  th,td,.cennik th,.cennik td,.plan th,.plan td,
+  .godziny-tabela th,.godziny-tabela td{font-size:max(12px,.8rem) !important}
+}
+
+/* Poniżej 560 px przycisk CTA z paska ustępuje miejsca telefonowi i menu.
+   Ta sama akcja jest w menu pod hamburgerem i w treści strony, więc nic
+   nie ginie — a pasek przestaje wypychać stronę w bok. */
+@media (max-width: 560px){
+  .btn--belka,.btn--zloty.btn--belka,.btn--czerwony.btn--belka,
+  .btn--glowny.btn--belka,.btn--pelny-kolor.btn--belka{display:none !important}
+}
+
+
+/* ============ TELEFON: ostatnie etykiety i pasek dni
+ * .krok-etyk i podobne to klasy na <label>, wiec wygrywaja z regula na samym
+ * elemencie. Pasek dni w kreatorze rezerwacji ma sie PRZEWIJAC w bok,
+ * a nie rozpychac strone — min-width:0 przywraca przycinanie. */
+@media (max-width:900px){
+  label,legend,.krok-etyk,.znacznik,.wyroznik,.pole-grupa label,
+  .zapis-form label,.wizyta-form label,.zam-form label,.rez-pole label{
+    font-size:max(12px,.78rem) !important;
+  }
+  .dni,#dni,.godziny,#godziny{min-width:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .kreator,.kreator .krok{min-width:0}
+}
+
+
+/* ============ TELEFON: wyliczona lista drobnego tekstu
+ * Selektory zebrane ze strony skryptem tmp/zbierz-male.mjs — to dokładnie te
+ * elementy, które na 390 px renderowały się poniżej 12 px. Lista jest
+ * wyliczona, nie zgadnięta, więc nie zostawia ogonów. */
+@media (max-width:900px){
+  .btn,
+  .btn--belka,
+  .btn--zloty,
+  .podpis-rola,
+  .wybor{font-size:12px !important}
+}
+
+
+@media (max-width:900px){
+  .skip{min-height:44px;display:inline-flex;align-items:center}
+}
+
+/* switcher w menu mobilnym */
+@media (max-width:560px){
+  header .jz{display:none}
+  .jz--mob{display:flex;gap:2px;padding:10px 0 2px}
+  .jz--mob .lang{min-width:44px;min-height:44px;display:inline-flex;
+    align-items:center;justify-content:center}
+}
+@media (min-width:561px){ .jz--mob{display:none} }
+
+
+/* --- kartki w otwarciu --- */
+.kartki{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.kartka{display:flex;align-items:center;gap:11px;text-decoration:none;
+  background:rgba(18,38,29,.88);border:1px solid var(--kant-ciemny);border-radius:8px;
+  padding:11px 14px;min-height:44px;flex:1 1 200px;max-width:280px}
+.kartka-znak{flex:0 0 auto;display:grid;place-items:center;width:32px;height:32px;
+  border-radius:7px;background:var(--kant-ciemny);color:var(--zloto-jasne)}
+.kartka-znak svg{width:18px;height:18px}
+.kartka-tresc{display:grid;gap:1px;min-width:0}
+.kartka-tresc b{font-size:.9rem;font-weight:600;color:var(--krem);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kartka-tresc span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.8rem;color:rgba(251,247,239,.72)}
+a.kartka:hover{border-color:var(--zloto-jasne)}
+.kartka--akcent .kartka-znak{background:var(--zloto-jasne);color:var(--las)}
+
+/* --- pasek zaufania --- */
+.zaufanie{background:var(--krem-2);display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;
+  gap:8px 26px;padding:18px clamp(18px,4vw,32px);max-width:var(--szer);margin-inline:auto}
+/* Kropka rozdzielajaca rysowana przez ::before, a nie wpisana w tresc —
+   przy zawijaniu nie zostaje sierota na poczatku wiersza. */
+.zaufanie-poz + .zaufanie-poz::before{content:"·";margin-right:26px;color:var(--zloto)}
+.zaufanie-poz{font-size:.88rem;color:var(--atrament)}
+.zaufanie-poz{display:flex;align-items:flex-start;gap:10px;
+  padding:14px clamp(18px,4vw,32px);border-top:1px solid var(--kant-ciemny);font-size:.88rem}
+.zaufanie-poz:first-child{border-top:0}
+.zaufanie-znak{flex:0 0 auto;display:grid;place-items:center;width:20px;height:20px;
+  color:var(--zloto-jasne);margin-top:1px}
+.zaufanie-znak svg{width:15px;height:15px}
+@media (min-width:820px){
+  .zaufanie{grid-template-columns:repeat(4,1fr);max-width:var(--szer);margin-inline:auto}
+  .zaufanie-poz{border-top:0;border-left:1px solid var(--kant-ciemny);padding-block:18px}
+  .zaufanie-poz:first-child{border-left:0}
+}
